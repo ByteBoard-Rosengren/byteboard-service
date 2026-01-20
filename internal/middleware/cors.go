@@ -23,7 +23,7 @@ func CORS(config CORSConfig) func(http.Handler) http.Handler {
 				// Set specific origin (required for credentials)
 				w.Header().Set("Access-Control-Allow-Origin", origin)
 				// Enable credentials (cookies, authorization headers)
-				w.Header().Set("Access-Control-Allow-Origin", "true")
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
 
 				log.Debug().
 					Str("origin", origin).
