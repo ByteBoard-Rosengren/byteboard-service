@@ -1,5 +1,7 @@
 # ByteBoard Backend Service
 
+### [Click Here to Checkout the Website](https://byteboard.win)
+
 A RESTful API backend for ByteBoard - a social platform for developers to share posts, comments, and profiles. Built with Go, featuring JWT authentication, role-based authorization, and PostgreSQL.
 
 ## Features
