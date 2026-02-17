@@ -100,9 +100,6 @@ func (db *DB) GetCommentsByPost(postId int) ([]model.Comment, error) {
 		commentList = append(commentList, comment)
 	}
 
-	if len(commentList) == 0 {
-		return nil, fmt.Errorf("no comments were found")
-	}
 	return commentList, nil
 }
 
@@ -209,9 +206,6 @@ func (db *DB) GetPostById(postId int) (*model.Post, error) {
 	err := db.QueryRow(query, postId).Scan(&post.PostId, &post.UserId, &post.Title, &post.Content, &post.Author, &post.DatePosted)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("post not found")
-	}
-	if err != nil {
-		return nil, fmt.Errorf("failed to query post with that id: %w", err)
 	}
 
 	return &post, nil
