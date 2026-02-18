@@ -50,8 +50,8 @@ func CheckPasswordWithError(password, hashedPassword string) error {
 // Validate password meets minimum requirements
 func ValidatePasswordStrength(password string) error {
 	// Validate password is not too long or too short
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 characters long")
 	}
 	if len(password) > 72 {
 		return model.ErrPasswordTooLong
