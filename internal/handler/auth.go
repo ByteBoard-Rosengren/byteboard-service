@@ -29,7 +29,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create user and profile with auth service
-	user, profile, err := h.authService.Register(req.Username, req.Password, req.FirstName, req.LastName)
+	user, profile, token, err := h.authService.Register(req.Username, req.Password, req.FirstName, req.LastName)
 	if err != nil {
 		// Specific errors
 		if err.Error() == "username already exists" {
@@ -49,16 +49,16 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create response
-	response := map[string]interface{}{
-		"message": "User successfully registered",
-		"user": model.UserSummary{
+	response := model.AuthResponse{
+		Token: token,
+		User: model.UserSummary{
 			UserID:    user.ID,
 			Username:  user.Username,
 			Role:      user.Role,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 		},
-		"profile": profile,
+		Profile: profile,
 	}
 
 	log.Info().
