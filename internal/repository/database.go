@@ -648,3 +648,134 @@ func (db *DB) CreateNotification(notif *model.Notification) error {
 }
 
 // #endregion
+
+// # region User Reactions
+
+// Post Reactions
+func (db *DB) UpsertPostReaction(reaction model.Reaction) error {
+	query := `
+		INSERT INTO post_reactions (user_id, post_id, reaction) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (user_id, post_id) 
+		DO UPDATE SET reaction = EXCLUDED.reaction;
+	`
+
+	_, err := db.Exec(query, reaction.UserId, reaction.TargetId, reaction.Reaction)
+	if err != nil {
+		return fmt.Errorf("failed to upsert post reaction: %w", err)
+	}
+
+	return nil
+}
+
+// Remove post reaction
+func (db *DB) DeletePostReaction(reaction model.Reaction) error {
+	query := `
+		DELETE FROM post_reactions 
+		WHERE user_id = $1 AND post_id = $2;
+	`
+
+	result, err := db.Exec(query, reaction.UserId, reaction.TargetId)
+	if err != nil {
+		return fmt.Errorf("failed to delete post reaction: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("reaction not found")
+	}
+
+	return nil
+}
+
+// Get the counts of the post likes and dislikes
+func (db *DB) GetPostReactionCounts(postId, viewerId int) (model.ReactionCounts, error) {
+	query := `
+	SELECT
+		COUNT(*) FILTER (WHERE reaction = 'like') AS likes,
+		COUNT(*) FILTER (WHERE reaction = 'dislike') AS dislikes,
+		MAX(reaction) FILTER (WHERE user_id = $2) AS user_reaction
+	FROM post_reactions 
+	WHERE post_id = $1;
+	`
+
+	var count model.ReactionCounts
+	err := db.QueryRow(query, postId, viewerId).Scan(
+		&count.Likes,
+		&count.Dislikes,
+		&count.UserReaction,
+	)
+	if err != nil {
+		return model.ReactionCounts{}, fmt.Errorf("failed to get post reaction counts: %w", err)
+	}
+
+	return count, nil
+}
+
+// Comment Reactions
+func (db *DB) UpsertCommentReaction(reaction model.Reaction) error {
+	query := `
+		INSERT INTO comment_reactions (user_id, comment_id, reaction) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (user_id, comment_id) 
+		DO UPDATE SET reaction = EXCLUDED.reaction;
+	`
+
+	_, err := db.Exec(query, reaction.UserId, reaction.TargetId, reaction.Reaction)
+	if err != nil {
+		return fmt.Errorf("failed to upsert comment reaction: %w", err)
+	}
+
+	return nil
+}
+
+// Remove comment reaction
+func (db *DB) DeleteCommentReaction(reaction model.Reaction) error {
+	query := `
+		DELETE FROM comment_reactions 
+		WHERE user_id = $1 AND comment_id = $2;
+	`
+
+	result, err := db.Exec(query, reaction.UserId, reaction.TargetId)
+	if err != nil {
+		return fmt.Errorf("failed to delete comment reaction: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get the rows affected: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("reaction not found")
+	}
+
+	return nil
+}
+
+// Get the counts of the comment likes and dislikes
+func (db *DB) GetCommentReactionCounts(commentId, viewerId int) (model.ReactionCounts, error) {
+	query := `
+	SELECT
+		COUNT(*) FILTER (WHERE reaction = 'like') AS likes,
+		COUNT(*) FILTER (WHERE reaction = 'dislike') AS dislikes,
+		MAX(reaction) FILTER (WHERE user_id = $2) AS user_reaction
+	FROM comment_reactions 
+	WHERE comment_id = $1;
+	`
+
+	var count model.ReactionCounts
+	err := db.QueryRow(query, commentId, viewerId).Scan(
+		&count.Likes,
+		&count.Dislikes,
+		&count.UserReaction,
+	)
+	if err != nil {
+		return model.ReactionCounts{}, fmt.Errorf("failed to get comment reaction counts: %w", err)
+	}
+
+	return count, nil
+}
+// #endregion
