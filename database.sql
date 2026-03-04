@@ -9,6 +9,8 @@
 -- ----------------------------------------------------------------------
 
 -- Drop tables if they exist
+DROP TABLE IF EXISTS notifications CASCADE;
+
 DROP TABLE IF EXISTS comments CASCADE;
 
 DROP TABLE IF EXISTS posts CASCADE;
@@ -64,6 +66,17 @@ CREATE TABLE comments (
     FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE
 );
 
+CREATE TABLE notifications (
+    notification_id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    post_id INTEGER NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE
+);
+
 -- Create indexes for better query performance
 CREATE INDEX idx_posts_user_id ON posts (user_id);
 
@@ -72,3 +85,7 @@ CREATE INDEX idx_posts_date_posted ON posts (date_posted);
 CREATE INDEX idx_comments_post_id ON comments (post_id);
 
 CREATE INDEX idx_comments_user_id ON comments (user_id);
+
+CREATE INDEX idx_notifications_user_id ON notifications (user_id);
+
+CREATE INDEX idx_notifications_is_read ON notifications (user_id, is_read);

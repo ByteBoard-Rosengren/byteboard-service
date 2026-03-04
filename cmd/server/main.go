@@ -146,6 +146,10 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 	// DELETE
 	protected.HandleFunc("/users/{userId}", h.DeleteUser).Methods("DELETE")
 
+	// Notification endpoints
+	protected.HandleFunc("/notifications", h.GetNotificationsByUserId).Methods("GET")
+	protected.HandleFunc("/notifications/{notificationId}/read", h.MarkNotificationAsRead).Methods("PUT")
+
 	// User management (Admin only)
 	admin.HandleFunc("/users", h.GetAllUsers).Methods("GET")
 	admin.HandleFunc("/users/{userId}", h.GetUserById).Methods("GET")

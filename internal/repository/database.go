@@ -571,23 +571,79 @@ func (db *DB) UserExists(username string) (bool, error) {
 
 // #endregion
 
-/*
-	todo:
-		- Add comment
-		- Edit comment
-		- Delete comment
+// #region Notifications
 
-		- Add post
-		- Update post
-		- Delete post
+// GET /api/notifications - Get notification by user ID
+func (db *DB) GetNotificationsByUserId(userId int) ([]model.Notification, error) {
+	query := "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC;"
 
-		- Get profile by User ID
-		- Create profile
-		- Update profile
-		- Delete profile
+	rows, err := db.Query(query, userId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query notifications")
+	}
+	defer rows.Close()
 
-		- Get user by username
-		- Get userID by username
-		- Create user
-		- Check if user exists
-*/
+	var notifications []model.Notification
+	for rows.Next() {
+		var notif model.Notification
+		err := rows.Scan(&notif.ID, &notif.UserId, &notif.PostId, &notif.Message, &notif.IsRead, &notif.CreatedAt)
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan for notifications: %w", err)
+		}
+
+		notifications = append(notifications, notif)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate notifications: %w", err)
+	}
+
+	return notifications, nil
+}
+
+// PUT /api/notification/{notificationId}/read - Set a notification as read
+func (db *DB) MarkNotificationAsRead(notificationId int) error {
+	query := `
+		UPDATE notifications 
+		SET is_read = TRUE 
+		WHERE notification_id = $1;
+	`
+
+	result, err := db.Exec(query, notificationId)
+	if err != nil {
+		return fmt.Errorf("failed to update users profile: %w", err)
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("notification not found")
+	}
+
+	return nil
+}
+
+// Create a new notification
+func (db *DB) CreateNotification(notif *model.Notification) error {
+	query := `
+		INSERT INTO notifications (user_id, post_id, message) 
+		VALUES ($1, $2, $3)
+	`
+
+	_, err := db.Exec(query,
+		notif.UserId,
+		notif.PostId,
+		notif.Message,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create notification: %w", err)
+	}
+
+	return nil
+}
+
+// #endregion

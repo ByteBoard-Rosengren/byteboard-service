@@ -39,3 +39,12 @@ type User struct {
 	FirstName string `json:"first_name" db:"first_name"`
 	LastName string `json:"last_name" db:"last_name"`
 }
+
+type Notification struct {
+	ID int `json:"notification_id" db:"notification_id"`
+	UserId int `json:"user_id" db:"user_id"`
+	PostId int `json:"post_id" db:"post_id"`
+	Message string `json:"message" db:"message"`
+	IsRead bool `json:"is_read" db:"is_read"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
