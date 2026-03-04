@@ -977,9 +977,10 @@ func (h *Handler) createNotification(comment model.Comment) {
 	}
 
 	notif := model.Notification{
-		UserId:  post.UserId,
-		PostId:  comment.PostId,
-		Message: fmt.Sprintf("%s commented on your post!", comment.Author),
+		UserId:    post.UserId,
+		PostId:    comment.PostId,
+		Message:   fmt.Sprintf("%s commented on your post!", comment.Author),
+		CommentId: &comment.CommentId,
 	}
 
 	if err := h.db.CreateNotification(&notif); err != nil {
