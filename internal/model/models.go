@@ -49,3 +49,9 @@ type Notification struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	CommentId *int      `json:"comment_id" db:"comment_id"`
 }
+
+type ReactionCounts struct {
+	Likes int `json:"likes" db:"likes"`
+	Dislikes int `json:"dislikes" db:"dislikes"`
+	UserReaction *string `json:"user_reaction" db:"user_reaction"`
+}
