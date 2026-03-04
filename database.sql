@@ -73,8 +73,10 @@ CREATE TABLE notifications (
     message VARCHAR(255) NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    comment_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-    FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE
+    FOREIGN KEY (post_id) REFERENCES posts (post_id) ON DELETE CASCADE,
+    FOREIGN KEY (comment_id) REFERENCES comments (comment_id) ON DELETE CASCADE
 );
 
 -- Create indexes for better query performance

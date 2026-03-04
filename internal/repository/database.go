@@ -586,7 +586,7 @@ func (db *DB) GetNotificationsByUserId(userId int) ([]model.Notification, error)
 	var notifications []model.Notification
 	for rows.Next() {
 		var notif model.Notification
-		err := rows.Scan(&notif.ID, &notif.UserId, &notif.PostId, &notif.Message, &notif.IsRead, &notif.CreatedAt)
+		err := rows.Scan(&notif.ID, &notif.UserId, &notif.PostId, &notif.Message, &notif.IsRead, &notif.CreatedAt, &notif.CommentId)
 
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan for notifications: %w", err)
@@ -630,14 +630,15 @@ func (db *DB) MarkNotificationAsRead(notificationId int) error {
 // Create a new notification
 func (db *DB) CreateNotification(notif *model.Notification) error {
 	query := `
-		INSERT INTO notifications (user_id, post_id, message) 
-		VALUES ($1, $2, $3)
+		INSERT INTO notifications (user_id, post_id, message, comment_id) 
+		VALUES ($1, $2, $3, $4)
 	`
 
 	_, err := db.Exec(query,
 		notif.UserId,
 		notif.PostId,
 		notif.Message,
+		notif.CommentId,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create notification: %w", err)
