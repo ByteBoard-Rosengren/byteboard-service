@@ -50,8 +50,14 @@ type Notification struct {
 	CommentId *int      `json:"comment_id" db:"comment_id"`
 }
 
+type Reaction struct {
+	UserId   int    `json:"user_id" db:"user_id"`
+	TargetId int    `json:"target_id"`
+	Reaction string `json:"reaction" db:"reaction"`
+}
+
 type ReactionCounts struct {
-	Likes int `json:"likes" db:"likes"`
-	Dislikes int `json:"dislikes" db:"dislikes"`
+	Likes        int     `json:"likes" db:"likes"`
+	Dislikes     int     `json:"dislikes" db:"dislikes"`
 	UserReaction *string `json:"user_reaction" db:"user_reaction"`
 }
