@@ -150,6 +150,10 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 	protected.HandleFunc("/notifications", h.GetNotificationsByUserId).Methods("GET")
 	protected.HandleFunc("/notifications/{notificationId}/read", h.MarkNotificationAsRead).Methods("PUT")
 
+	// Comment and post reactions
+	protected.HandleFunc("/posts/{postId}/react", h.ReactToPost).Methods("POST")
+	protected.HandleFunc("/comments/{commentId}/react", h.ReactToComment).Methods("POST")
+
 	// User management (Admin only)
 	admin.HandleFunc("/users", h.GetAllUsers).Methods("GET")
 	admin.HandleFunc("/users/{userId}", h.GetUserById).Methods("GET")
