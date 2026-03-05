@@ -61,3 +61,13 @@ type ReactionCounts struct {
 	Dislikes     int     `json:"dislikes" db:"dislikes"`
 	UserReaction *string `json:"user_reaction" db:"user_reaction"`
 }
+
+type PostResponse struct {
+	Post
+	Reactions ReactionCounts `json:"reactions"`
+}
+
+type CommentResponse struct {
+	Comment
+	Reactions ReactionCounts `json:"reactions"`
+}
