@@ -113,9 +113,9 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 
 	// Comment endpoints
 	// GET
-	api.HandleFunc("/comments", h.GetAllComments).Methods("GET")
-	api.HandleFunc("/posts/{postId}/comments", h.GetCommentsOnPost).Methods("GET")
-	api.HandleFunc("/comments/{commentId}", h.GetCommentById).Methods("GET")
+	protected.HandleFunc("/comments", h.GetAllComments).Methods("GET")
+	protected.HandleFunc("/posts/{postId}/comments", h.GetCommentsOnPost).Methods("GET")
+	protected.HandleFunc("/comments/{commentId}", h.GetCommentById).Methods("GET")
 	// POST
 	protected.HandleFunc("/posts/{postId}/comments", h.CreateComment).Methods("POST")
 	// PUT
@@ -125,9 +125,9 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 
 	// Post endpoints
 	// GET
-	api.HandleFunc("/posts", h.GetAllPosts).Methods("GET")
-	api.HandleFunc("/posts/{postId}", h.GetPostById).Methods("GET")
-	api.HandleFunc("/posts/user/{userId}", h.GetPostsByUserId).Methods("GET")
+	protected.HandleFunc("/posts", h.GetAllPosts).Methods("GET")
+	protected.HandleFunc("/posts/{postId}", h.GetPostById).Methods("GET")
+	protected.HandleFunc("/posts/user/{userId}", h.GetPostsByUserId).Methods("GET")
 	// POST
 	protected.HandleFunc("/posts", h.CreatePost).Methods("POST")
 	// PUT
@@ -136,8 +136,8 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 	protected.HandleFunc("/posts/{postId}", h.DeletePost).Methods("DELETE")
 
 	// Profile endpoints
-	api.HandleFunc("/profiles", h.GetAllProfiles).Methods("GET")
-	api.HandleFunc("/profiles/{userId}", h.GetProfileByUserId).Methods("GET")
+	protected.HandleFunc("/profiles", h.GetAllProfiles).Methods("GET")
+	protected.HandleFunc("/profiles/{userId}", h.GetProfileByUserId).Methods("GET")
 	// PUT
 	protected.HandleFunc("/profiles/{userId}", h.UpdateProfile).Methods("PUT")
 
@@ -149,6 +149,10 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 	// Notification endpoints
 	protected.HandleFunc("/notifications", h.GetNotificationsByUserId).Methods("GET")
 	protected.HandleFunc("/notifications/{notificationId}/read", h.MarkNotificationAsRead).Methods("PUT")
+
+	// Comment and post reactions
+	protected.HandleFunc("/posts/{postId}/react", h.ReactToPost).Methods("POST")
+	protected.HandleFunc("/comments/{commentId}/react", h.ReactToComment).Methods("POST")
 
 	// User management (Admin only)
 	admin.HandleFunc("/users", h.GetAllUsers).Methods("GET")

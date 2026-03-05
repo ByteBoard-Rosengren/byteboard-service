@@ -9,6 +9,10 @@
 -- ----------------------------------------------------------------------
 
 -- Drop tables if they exist
+DROP TABLE IF EXISTS comment_reactions CASCADE;
+
+DROP TABLE IF EXISTS post_reactions CASCADE;
+
 DROP TABLE IF EXISTS notifications CASCADE;
 
 DROP TABLE IF EXISTS comments CASCADE;
@@ -79,6 +83,22 @@ CREATE TABLE notifications (
     FOREIGN KEY (comment_id) REFERENCES comments (comment_id) ON DELETE CASCADE
 );
 
+CREATE TABLE post_reactions (
+    reaction_id SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    post_id     INTEGER NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE,
+    reaction    VARCHAR(10) NOT NULL CHECK (reaction IN ('like', 'dislike')),
+    CONSTRAINT unique_post_reaction UNIQUE (user_id, post_id)
+);
+
+CREATE TABLE comment_reactions (
+    reaction_id SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    comment_id  INTEGER NOT NULL REFERENCES comments(comment_id) ON DELETE CASCADE,
+    reaction    VARCHAR(10) NOT NULL CHECK (reaction IN ('like', 'dislike')),
+    CONSTRAINT unique_comment_reaction UNIQUE (user_id, comment_id)
+);
+
 -- Create indexes for better query performance
 CREATE INDEX idx_posts_user_id ON posts (user_id);
 
@@ -91,3 +111,7 @@ CREATE INDEX idx_comments_user_id ON comments (user_id);
 CREATE INDEX idx_notifications_user_id ON notifications (user_id);
 
 CREATE INDEX idx_notifications_is_read ON notifications (user_id, is_read);
+
+CREATE INDEX idx_post_reactions_post_id ON post_reactions (post_id);
+
+CREATE INDEX idx_comment_reactions_comment_id ON comment_reactions (comment_id);
