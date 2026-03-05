@@ -125,8 +125,34 @@ func (h *Handler) GetCommentsOnPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	username := middleware.GetUsername(r)
+	if username == "" {
+		log.Warn().Msg("Failed to get username in the context")
+		writeErrorResponse(w, http.StatusUnauthorized, "Unauthorized user")
+		return
+	}
+
+	user, err := h.db.GetUserByUsername(username)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user info")
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to get user")
+		return
+	}
+
+	var response []model.CommentResponse
+	for _, c := range comments {
+		counts, err := h.db.GetCommentReactionCounts(c.CommentId, user.ID)
+		if err != nil {
+			log.Error().Err(err).Int("Comment ID", c.CommentId).Msg("Failed to get comment reaction counts")
+			writeErrorResponse(w, http.StatusInternalServerError, "Failed to get reaction counts")
+			return
+		}
+
+		response = append(response, model.CommentResponse{Comment: c, Reactions: counts})
+	}
+
 	log.Info().Int("count", len(comments)).Msg("Successfully retrieved comments on post")
-	writeJSONResponse(w, http.StatusOK, comments)
+	writeJSONResponse(w, http.StatusOK, response)
 
 }
 
@@ -402,8 +428,35 @@ func (h *Handler) GetPostById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	viewerId := 0
+
+	// Get authenticated user from context
+	username := middleware.GetUsername(r)
+	if username == "" {
+		log.Warn().Msg("No username in the context")
+		writeErrorResponse(w, http.StatusUnauthorized, "Not authenticated")
+		return
+	}
+
+	// Get the user from the db
+	user, err := h.db.GetUserByUsername(username)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get user")
+		writeErrorResponse(w, http.StatusInternalServerError, "failed to get user")
+		return
+	}
+
+	viewerId = user.ID
+
+	counts, err := h.db.GetPostReactionCounts(id, viewerId)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get post reaction counts")
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to get reaction counts")
+		return
+	}
+
 	log.Info().Int("Post ID", id).Msg("Successfully retrieved post by ID")
-	writeJSONResponse(w, http.StatusOK, post)
+	writeJSONResponse(w, http.StatusOK, model.PostResponse{Post: *post, Reactions: counts})
 }
 
 // GET /api/posts/user/{userId} - Handler to get all posts by UserID
@@ -1040,8 +1093,8 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reaction := model.Reaction {
-		UserId: user.ID,
+	reaction := model.Reaction{
+		UserId:   user.ID,
 		TargetId: postId,
 		Reaction: req.Reaction,
 	}
@@ -1122,8 +1175,8 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reaction := model.Reaction {
-		UserId: user.ID,
+	reaction := model.Reaction{
+		UserId:   user.ID,
 		TargetId: commentId,
 		Reaction: req.Reaction,
 	}
