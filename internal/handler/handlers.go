@@ -1041,6 +1041,39 @@ func (h *Handler) createNotification(comment model.Comment) {
 	}
 }
 
+// Helper function for creating a notification
+func (h *Handler) createReactionNotification(comment *model.Comment, post *model.Post, reactor, reaction string) {
+	log.Info().Msg("Creating notification")
+
+	var ownerId, postId int
+	var commentId *int
+	var target string
+
+	if comment == nil {
+		// Post reaction
+		ownerId = post.UserId
+		postId = post.PostId
+		target = "post"
+	} else {
+		// Comment reaction
+		ownerId = comment.UserId
+		postId = comment.PostId
+		commentId = &comment.CommentId
+		target = "comment"
+	}
+
+	notif := model.Notification{
+		UserId:    ownerId,
+		PostId:    postId,
+		CommentId: commentId,
+		Message:   fmt.Sprintf("%s %sd your %s", reactor, reaction, target),
+	}
+
+	if err := h.db.CreateNotification(&notif); err != nil {
+		log.Error().Err(err).Msg("Failed to create reaction notification")
+	}
+}
+
 // #endregion
 
 // #region Post/Comment reaction handlers
@@ -1068,6 +1101,13 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Warn().Str("Post ID", vars["postId"]).Msg("Invalid post ID format")
 		writeErrorResponse(w, http.StatusBadRequest, "Invalid post ID")
+		return
+	}
+
+	post, err := h.db.GetPostById(postId)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get post by ID")
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to get post")
 		return
 	}
 
@@ -1106,12 +1146,18 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 			writeErrorResponse(w, http.StatusInternalServerError, "Failed to remove reaction")
 			return
 		}
+		if post.UserId != user.ID {
+			go h.db.DeleteReactionNotification(post.UserId, postId, nil)
+		}
 	} else {
 		// Insert or switch reaction
 		if err := h.db.UpsertPostReaction(reaction); err != nil {
 			log.Error().Err(err).Msg("Failed to upsert post reaction")
 			writeErrorResponse(w, http.StatusInternalServerError, "Failed to save reaction")
 			return
+		}
+		if post.UserId != user.ID {
+			go h.createReactionNotification(nil, post, user.Username, req.Reaction)
 		}
 	}
 
@@ -1125,6 +1171,7 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 
 	log.Info().Int("Post ID", postId).Str("Reaction", req.Reaction).Msg("Successfully reacted to post")
 	writeJSONResponse(w, http.StatusOK, updatedCounts)
+
 }
 
 // POST /api/comments/{commentId}/react - Like or dislike a comment
@@ -1150,6 +1197,13 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Warn().Str("Comment ID", vars["commentId"]).Msg("Invalid comment ID format")
 		writeErrorResponse(w, http.StatusBadRequest, "Invalid comment ID")
+		return
+	}
+
+	comment, err := h.db.GetCommentById(commentId)
+	if err != nil {
+		log.Error().Err(err).Msg("Could not get comment by ID")
+		writeErrorResponse(w, http.StatusInternalServerError, "failed to get comment")
 		return
 	}
 
@@ -1188,12 +1242,18 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 			writeErrorResponse(w, http.StatusInternalServerError, "Failed to remove reaction")
 			return
 		}
+		if comment.UserId != user.ID {
+			go h.db.DeleteReactionNotification(comment.UserId, comment.PostId, &comment.CommentId)
+		}
 	} else {
 		// Insert or switch reaction
 		if err := h.db.UpsertCommentReaction(reaction); err != nil {
 			log.Error().Err(err).Msg("Failed to upsert comment reaction")
 			writeErrorResponse(w, http.StatusInternalServerError, "Failed to save reaction")
 			return
+		}
+		if comment.UserId != user.ID {
+			go h.createReactionNotification(comment, nil, user.Username, req.Reaction)
 		}
 	}
 

@@ -778,4 +778,29 @@ func (db *DB) GetCommentReactionCounts(commentId, viewerId int) (model.ReactionC
 
 	return count, nil
 }
+
+// Delete a reaction notification
+func (db *DB) DeleteReactionNotification(userId, postId int, commentId *int) error {
+	query := `
+		DELETE FROM notifications 
+		WHERE user_id = $1 AND post_id = $2 
+		AND (comment_id = $3 OR ($3 IS NULL AND comment_id IS NULL));
+	`
+
+	result, err := db.Exec(query, userId, postId, commentId)
+	if err != nil {
+		return fmt.Errorf("failed to delete reaction notification: %w", err)
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+	if rows == 0 {
+		log.Warn().Int("User ID", userId).Int("Post ID", postId).Msg("No reaction notification found to delete")
+		return nil
+	}
+
+	return nil
+}
+
 // #endregion
