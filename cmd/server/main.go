@@ -19,10 +19,14 @@ import (
 
 func main() {
 	// Setup Zerologger
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.TimeFieldFormat = time.RFC3339
 	log.Logger = zerolog.New(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		TimeFormat: "2006-01-02 15:04:05",
+		FormatTimestamp: func(i interface{}) string {
+			t, _ := time.Parse(time.RFC3339, i.(string))
+			return t.Local().Format("2006-01-02 15:04:05")
+		},
 	}).
 		With().
 		Timestamp().
