@@ -90,7 +90,14 @@ func (h *Handler) ReactToPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if post.UserId != user.ID {
-			go h.createReactionNotification(nil, post, user.Username, req.Reaction)
+			prevReaction := counts.UserReaction
+			go func() {
+				if prevReaction != nil {
+					// Switch reaction - delete old notification before making new one
+					h.db.DeleteReactionNotification(post.UserId, postId, nil)
+				}
+				h.createReactionNotification(nil, post, user.Username, req.Reaction)
+			}()
 		}
 	}
 
@@ -186,7 +193,14 @@ func (h *Handler) ReactToComment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if comment.UserId != user.ID {
-			go h.createReactionNotification(comment, nil, user.Username, req.Reaction)
+			prevReaction := counts.UserReaction
+			go func() {
+				if prevReaction != nil {
+					// Switch reaction - delete old notif before making new one
+					h.db.DeleteReactionNotification(comment.UserId, comment.PostId, &commentId)
+				}
+				h.createReactionNotification(comment, nil, user.Username, req.Reaction)
+			}()
 		}
 	}
 
