@@ -649,7 +649,7 @@ func (db *DB) CreateNotification(notif *model.Notification) error {
 
 // #endregion
 
-// # region User Reactions
+// #region User Reactions
 
 // Post Reactions
 func (db *DB) UpsertPostReaction(reaction model.Reaction) error {
