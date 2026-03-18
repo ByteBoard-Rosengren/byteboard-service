@@ -12,10 +12,11 @@ import (
 
 	database "byte-board/internal/repository"
 
+	_ "time/tzdata"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	_ "time/tzdata"
 )
 
 func main() {
