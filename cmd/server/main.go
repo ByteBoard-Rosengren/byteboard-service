@@ -114,6 +114,7 @@ func setupRouter(h *handler.Handler, authMiddleware *middleware.AuthMiddleware) 
 	admin.Use(middleware.RequireRole("admin"))
 
 	// Login/Register endpoints
+	api.HandleFunc("/health", h.GetHealth).Methods("GET")
 	api.HandleFunc("/register", h.Register).Methods("POST")
 	api.HandleFunc("/login", h.Login).Methods("POST")
 
